@@ -20,7 +20,6 @@
 #include "Kaleidoscope-MouseKeys.h"
 
 // Support for macros
-#include "Kaleidoscope-Macros.h"
 
 // Support for controlling the keyboard's LEDs
 #include "Kaleidoscope-LEDControl.h"
@@ -153,9 +152,9 @@ const Key keymaps[][ROWS][COLS] PROGMEM = {
 
   [FUNCTION] =  KEYMAP_STACKED
   (___,      Key_F1,           Key_F2,      Key_F3,     Key_F4,        Key_F5,           XXX,
-   Key_Tab,  ___,              Key_mouseUp, ___,        Key_mouseBtnR, Key_mouseWarpEnd, Key_mouseWarpNE,
+   Key_Tab,  ___,              Key_mouseUp, Key_mouseScrollUp,        Key_mouseBtnR, Key_mouseWarpEnd, Key_mouseWarpNE,
    Key_Home, Key_mouseL,       Key_mouseDn, Key_mouseR, Key_mouseBtnL, Key_mouseWarpNW,
-   Key_End,  Key_PrintScreen,  Key_Insert,  ___,        Key_mouseBtnM, Key_mouseWarpSW,  Key_mouseWarpSE,
+   Key_End,  Key_PrintScreen,  Key_Insert,  Key_mouseScrollDn,        Key_mouseBtnM, Key_mouseWarpSW,  Key_mouseWarpSE,
    ___, Key_Delete, OSM(LeftGui), ___,
    ___,
 
@@ -336,7 +335,8 @@ void setup() {
   cRGB yellowgreen = CRGB(154, 205, 50);
 
   FunColor.all(CRGB(0, 0, 0));
-  FunColor.allMouse(CRGB(0, 200, 200)); 
+  FunColor.allModifiers(yellow, 100);
+  FunColor.allMouse(CRGB(0, 200, 200));
   FunColor.escape(red, 170);
   FunColor.numbers(yellowgreen, 160);
   FunColor.symbols(blue, 160);
@@ -348,23 +348,27 @@ void setup() {
   FunColor.tab(white, 170);
   FunColor.backspace(red, 170);
   FunColor.del(red, 255);
-  FunColor.enter(white, 170);
-  FunColor.arrows(white, 170);
+  FunColor.enter(green, 255);
+  FunColor.space(slateblue, 200);
+  FunColor.arrows(orange, 170);
   FunColor.nav(yellow, 170);
   FunColor.insert(yellow, 170);
-  FunColor.cmd(CRGB(250, 235, 215));
-  FunColor.app(CRGB(250, 235, 215));
-  FunColor.printscreen(CRGB(250, 235, 215));
-  FunColor.pause(CRGB(250, 235, 215));
-  FunColor.scrolllock(CRGB(250, 235, 215));
-  FunColor.capslock(CRGB(250, 235, 215));
+  FunColor.cmd(lime, 180);
+  FunColor.app(lime, 180);
+  FunColor.printscreen(lime, 255);
+  FunColor.pause(lime, 180);
+  FunColor.scrolllock(red, 255);
+  FunColor.capslock(red, 255);
   FunColor.fkeys(red, 170);
-  FunColor.media(CRGB(250, 235, 215));
+  FunColor.media(lime, 180);
   FunColor.led(blue, 190);
   FunColor.mousemove(cyan, 170);
   FunColor.mousebuttons(lightskyblue, 170);
   FunColor.mousewarp(cyan, 100);
   FunColor.mousescroll(lightskyblue, 100);
+  FunColor.macros(violet, 255);
+  FunColor.layer(lime, 100);
+  FunColor.oneshot(skyblue, 150);
 }
 
 /** loop is the second of the standard Arduino sketch functions.
