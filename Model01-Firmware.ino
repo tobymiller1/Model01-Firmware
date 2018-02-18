@@ -6,12 +6,12 @@
 #define BUILD_INFORMATION "locally built"
 #endif
 
-
 /**
  * These #include directives pull in the Kaleidoscope firmware core,
  * as well as the Kaleidoscope plugins we use in the Model 01's firmware
  */
 
+#define KALEIDOSCOPE_HOSTOS_GUESSER 1
 
 // The Kaleidoscope core
 #include "Kaleidoscope.h"
@@ -28,30 +28,9 @@
 // Support for "Numpad" mode, which is mostly just the Numpad specific LED mode
 #include "Kaleidoscope-NumPad.h"
 
-// Support for an "LED off mode"
-#include "LED-Off.h"
-
 // Support for the "Boot greeting" effect, which pulses the 'LED' button for 10s
 // when the keyboard is connected to a computer (or that computer is powered on)
 #include "Kaleidoscope-LEDEffect-BootGreeting.h"
-
-// Support for LED modes that set all LEDs to a single color
-#include "Kaleidoscope-LEDEffect-SolidColor.h"
-
-// Support for an LED mode that makes all the LEDs 'breathe'
-#include "Kaleidoscope-LEDEffect-Breathe.h"
-
-// Support for an LED mode that makes a red pixel chase a blue pixel across the keyboard
-#include "Kaleidoscope-LEDEffect-Chase.h"
-
-// Support for LED modes that pulse the keyboard's LED in a rainbow pattern
-#include "Kaleidoscope-LEDEffect-Rainbow.h"
-
-// Support for an LED mode that lights up the keys as you press them
-#include "Kaleidoscope-LED-Stalker.h"
-
-// Support for an LED mode that prints the keys you press in letters 4px high
-#include "Kaleidoscope-LED-AlphaSquare.h"
 
 // Support for Keyboardio's internal keyboard testing mode
 #include "Kaleidoscope-Model01-TestMode.h"
@@ -59,6 +38,15 @@
 // Support for host power management (suspend & wakeup)
 #include "Kaleidoscope-HostPowerManagement.h"
 
+#include <Kaleidoscope-HostOS.h>
+#include <Kaleidoscope/HostOS-select.h>
+#include <Kaleidoscope-Unicode.h>
+#include <Kaleidoscope-OneShot.h>
+#include <kaleidoscope/hid.h>
+#include <Kaleidoscope-LED-ActiveModColor.h>
+#include <Kaleidoscope-LEDEffect-FunctionalColor.h>
+
+kaleidoscope::LEDFunctionalColor FunColor;
 
 /** This 'enum' is a list of all the macros used by the Model 01's firmware
   * The names aren't particularly important. What is important is that each
@@ -74,7 +62,9 @@
   */
 
 enum { MACRO_VERSION_INFO,
-       MACRO_ANY
+       MACRO_POUND,
+       MACRO_LAMBDA,
+       MACRO_ANY,
      };
 
 
@@ -121,7 +111,7 @@ enum { MACRO_VERSION_INFO,
   *
   */
 
-enum { QWERTY, NUMPAD, FUNCTION }; // layers
+enum { WORKMAN, NUMPAD, FUNCTION }; // layers
 
 /* This comment temporarily turns off astyle's indent enforcement
  *   so we can make the keymaps actually resemble the physical key layout better
@@ -130,27 +120,27 @@ enum { QWERTY, NUMPAD, FUNCTION }; // layers
 
 const Key keymaps[][ROWS][COLS] PROGMEM = {
 
-  [QWERTY] = KEYMAP_STACKED
-  (___,          Key_1, Key_2, Key_3, Key_4, Key_5, Key_LEDEffectNext,
-   Key_Backtick, Key_Q, Key_W, Key_E, Key_R, Key_T, Key_Tab,
-   Key_PageUp,   Key_A, Key_S, Key_D, Key_F, Key_G,
-   Key_PageDown, Key_Z, Key_X, Key_C, Key_V, Key_B, Key_Escape,
-   Key_LeftControl, Key_Backspace, Key_LeftGui, Key_LeftShift,
+  [WORKMAN] = KEYMAP_STACKED
+  (___,          LSHIFT(Key_1),         LSHIFT(Key_2),     M(MACRO_POUND),      LSHIFT(Key_4), LSHIFT(Key_5), Key_LEDEffectNext,
+   Key_Backtick, Key_Q, Key_D, Key_R, Key_W, Key_B, Key_Tab,
+   Key_PageUp,   Key_A, Key_S, Key_H, Key_T, Key_G,
+   Key_PageDown, Key_Z, Key_X, Key_M, Key_C, Key_V, Key_Escape,
+   Key_LeftControl, Key_Backspace, ShiftToLayer(NUMPAD), Key_LeftShift,
    ShiftToLayer(FUNCTION),
 
-   M(MACRO_ANY),  Key_6, Key_7, Key_8,     Key_9,         Key_0,         LockLayer(NUMPAD),
-   Key_Enter,     Key_Y, Key_U, Key_I,     Key_O,         Key_P,         Key_Equals,
-                  Key_H, Key_J, Key_K,     Key_L,         Key_Semicolon, Key_Quote,
-   Key_RightAlt,  Key_N, Key_M, Key_Comma, Key_Period,    Key_Slash,     Key_Minus,
+   M(MACRO_ANY),  LSHIFT(Key_6), LSHIFT(Key_7), LSHIFT(Key_8), LSHIFT(Key_3), M(MACRO_LAMBDA), LockLayer(NUMPAD),
+   Key_Enter,     Key_J, Key_F, Key_U,     Key_P,         Key_Semicolon, LSHIFT(Key_5),
+                  Key_Y, Key_N, Key_E,     Key_O,         Key_I,         Key_Quote,
+   Key_RightAlt,  Key_K, Key_L, Key_Comma, Key_Period,    Key_Slash,     Key_Minus,
    Key_RightShift, Key_LeftAlt, Key_Spacebar, Key_RightControl,
    ShiftToLayer(FUNCTION)),
 
 
   [NUMPAD] =  KEYMAP_STACKED
   (___, ___, ___, ___, ___, ___, ___,
-   ___, ___, ___, ___, ___, ___, ___,
-   ___, ___, ___, ___, ___, ___,
-   ___, ___, ___, ___, ___, ___, ___,
+   ___, ___, LSHIFT(Key_LeftBracket), LSHIFT(Key_RightBracket), Key_Equals, ___, ___,
+   ___, ___, LSHIFT(Key_9), LSHIFT(Key_0), Key_Semicolon, ___,
+   ___, ___, Key_LeftBracket, Key_RightBracket, ___, ___, ___,
    ___, ___, ___, ___,
    ___,
 
@@ -166,7 +156,7 @@ const Key keymaps[][ROWS][COLS] PROGMEM = {
    Key_Tab,  ___,              Key_mouseUp, ___,        Key_mouseBtnR, Key_mouseWarpEnd, Key_mouseWarpNE,
    Key_Home, Key_mouseL,       Key_mouseDn, Key_mouseR, Key_mouseBtnL, Key_mouseWarpNW,
    Key_End,  Key_PrintScreen,  Key_Insert,  ___,        Key_mouseBtnM, Key_mouseWarpSW,  Key_mouseWarpSE,
-   ___, Key_Delete, ___, ___,
+   ___, Key_Delete, OSM(LeftGui), ___,
    ___,
 
    Consumer_ScanPreviousTrack, Key_F6,                 Key_F7,                   Key_F8,                   Key_F9,          Key_F10,          Key_F11,
@@ -223,34 +213,33 @@ static void anyKeyMacro(uint8_t keyState) {
 
  */
 
+static void unicode(uint32_t character, uint8_t keyState) {
+  if (keyToggledOn(keyState)) {
+    Unicode.type(character);
+  }
+}
+
 const macro_t *macroAction(uint8_t macroIndex, uint8_t keyState) {
   switch (macroIndex) {
 
   case MACRO_VERSION_INFO:
     versionInfoMacro(keyState);
     break;
-
+    
   case MACRO_ANY:
     anyKeyMacro(keyState);
+    break;
+
+  case MACRO_POUND:
+    unicode(0x00A3, keyState);
+    break;
+
+  case MACRO_LAMBDA:
+    unicode(0x03BB, keyState);
     break;
   }
   return MACRO_NONE;
 }
-
-
-
-// These 'solid' color effect definitions define a rainbow of
-// LED color modes calibrated to draw 500mA or less on the
-// Keyboardio Model 01.
-
-
-static kaleidoscope::LEDSolidColor solidRed(160, 0, 0);
-static kaleidoscope::LEDSolidColor solidOrange(140, 70, 0);
-static kaleidoscope::LEDSolidColor solidYellow(130, 100, 0);
-static kaleidoscope::LEDSolidColor solidGreen(0, 160, 0);
-static kaleidoscope::LEDSolidColor solidBlue(0, 70, 130);
-static kaleidoscope::LEDSolidColor solidIndigo(0, 0, 170);
-static kaleidoscope::LEDSolidColor solidViolet(130, 0, 120);
 
 /** toggleLedsOnSuspendResume toggles the LEDs off when the host goes to sleep,
  * and turns them back on when it wakes up.
@@ -301,38 +290,6 @@ void setup() {
     // LEDControl provides support for other LED modes
     &LEDControl,
 
-    // We start with the LED effect that turns off all the LEDs.
-    &LEDOff,
-
-    // The rainbow effect changes the color of all of the keyboard's keys at the same time
-    // running through all the colors of the rainbow.
-    &LEDRainbowEffect,
-
-    // The rainbow wave effect lights up your keyboard with all the colors of a rainbow
-    // and slowly moves the rainbow across your keyboard
-    &LEDRainbowWaveEffect,
-
-    // The chase effect follows the adventure of a blue pixel which chases a red pixel across
-    // your keyboard. Spoiler: the blue pixel never catches the red pixel
-    &LEDChaseEffect,
-
-    // These static effects turn your keyboard's LEDs a variety of colors
-    &solidRed, &solidOrange, &solidYellow, &solidGreen, &solidBlue, &solidIndigo, &solidViolet,
-
-    // The breathe effect slowly pulses all of the LEDs on your keyboard
-    &LEDBreatheEffect,
-
-    // The AlphaSquare effect prints each character you type, using your
-    // keyboard's LEDs as a display
-    &AlphaSquareEffect,
-
-    // The stalker effect lights up the keys you've pressed recently
-    &StalkerEffect,
-
-    // The numpad plugin is responsible for lighting up the 'numpad' mode
-    // with a custom LED effect
-    &NumPad,
-
     // The macros plugin adds support for macros
     &Macros,
 
@@ -341,33 +298,73 @@ void setup() {
 
     // The HostPowerManagement plugin enables waking up the host from suspend,
     // and allows us to turn LEDs off when it goes to sleep.
-    &HostPowerManagement
+    &HostPowerManagement,
+
+    &Unicode,
+    &FunColor,
+    &HostOS,
+    &OneShot,
+    &ActiveModColorEffect
   );
-
-  // While we hope to improve this in the future, the NumPad plugin
-  // needs to be explicitly told which keymap layer is your numpad layer
-  NumPad.numPadLayer = NUMPAD;
-
-  // We configure the AlphaSquare effect to use RED letters
-  AlphaSquare.color = { 255, 0, 0 };
-
-  // We set the brightness of the rainbow effects to 150 (on a scale of 0-255)
-  // This draws more than 500mA, but looks much nicer than a dimmer effect
-  LEDRainbowEffect.brightness(150);
-  LEDRainbowWaveEffect.brightness(150);
-
-  // The LED Stalker mode has a few effects. The one we like is
-  // called 'BlazingTrail'. For details on other options,
-  // see https://github.com/keyboardio/Kaleidoscope-LED-Stalker
-  StalkerEffect.variant = STALKER(BlazingTrail);
+  
+  MouseKeys.speed = 2;
+  MouseKeys.speedDelay = 5;
+  MouseKeys.accelDelay = 100;
 
   // We want the keyboard to be able to wake the host up from suspend.
   HostPowerManagement.enableWakeup();
 
-  // We want to make sure that the firmware starts with LED effects off
-  // This avoids over-taxing devices that don't have a lot of power to share
-  // with USB devices
-  LEDOff.activate();
+  HostOS.os(kaleidoscope::hostos::WINDOWS);
+
+  cRGB antiquewhite = CRGB(250, 235, 215);
+  cRGB blue = CRGB(0, 0, 255);
+  cRGB cyan = CRGB(0, 255, 255);
+  cRGB green = CRGB(0, 128, 0);
+  cRGB lightskyblue = CRGB(135, 206, 250);
+  cRGB lime = CRGB(0, 255, 0);
+  cRGB mintcream = CRGB(245, 255, 250);
+  cRGB orange = CRGB(255, 165, 0);
+  cRGB orangered = CRGB(255, 100, 0);
+  cRGB palegreen = CRGB(152, 251, 152);
+  cRGB pink = CRGB(255, 192, 203);
+  cRGB red = CRGB(255, 0, 0);
+  cRGB skyblue = CRGB(135, 206, 235);
+  cRGB slateblue = CRGB(106, 90, 205);
+  cRGB violet = CRGB(238, 130, 238);
+  cRGB white = CRGB(255, 255, 255);
+  cRGB yellow = CRGB(255, 255, 0);
+  cRGB yellowgreen = CRGB(154, 205, 50);
+
+  FunColor.all(CRGB(0, 0, 0));
+  FunColor.allMouse(CRGB(0, 200, 200)); 
+  FunColor.escape(red, 170);
+  FunColor.numbers(yellowgreen, 160);
+  FunColor.symbols(blue, 160);
+  FunColor.letters(antiquewhite, 100);
+  FunColor.punctuation(blue, 170);
+  FunColor.brackets(blue, 200);
+  FunColor.backslash(blue, 170);
+  FunColor.pipe(blue, 170);
+  FunColor.tab(white, 170);
+  FunColor.backspace(red, 170);
+  FunColor.del(red, 255);
+  FunColor.enter(white, 170);
+  FunColor.arrows(white, 170);
+  FunColor.nav(yellow, 170);
+  FunColor.insert(yellow, 170);
+  FunColor.cmd(CRGB(250, 235, 215));
+  FunColor.app(CRGB(250, 235, 215));
+  FunColor.printscreen(CRGB(250, 235, 215));
+  FunColor.pause(CRGB(250, 235, 215));
+  FunColor.scrolllock(CRGB(250, 235, 215));
+  FunColor.capslock(CRGB(250, 235, 215));
+  FunColor.fkeys(red, 170);
+  FunColor.media(CRGB(250, 235, 215));
+  FunColor.led(blue, 190);
+  FunColor.mousemove(cyan, 170);
+  FunColor.mousebuttons(lightskyblue, 170);
+  FunColor.mousewarp(cyan, 100);
+  FunColor.mousescroll(lightskyblue, 100);
 }
 
 /** loop is the second of the standard Arduino sketch functions.
