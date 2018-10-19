@@ -136,17 +136,17 @@ const Key keymaps[][ROWS][COLS] PROGMEM = {
 
 
   [NUMPAD] =  KEYMAP_STACKED
-  (___, ___, ___, ___, ___, ___, ___,
-   ___, ___, LSHIFT(Key_LeftBracket), LSHIFT(Key_RightBracket), Key_Equals, ___, ___,
+  (___, ___, ___, ___, ___, ___, Key_Enter,
+   ___, ___, LSHIFT(Key_LeftBracket), LSHIFT(Key_RightBracket), Key_Equals, ___, Key_Spacebar,
    ___, ___, LSHIFT(Key_9), LSHIFT(Key_0), Key_Semicolon, ___,
    ___, ___, Key_LeftBracket, Key_RightBracket, ___, ___, ___,
    ___, ___, ___, ___,
    ___,
 
-   M(MACRO_VERSION_INFO),  ___, Key_Keypad7, Key_Keypad8,   Key_Keypad9,        Key_KeypadSubtract, ___,
-   ___,                    ___, Key_Keypad4, Key_Keypad5,   Key_Keypad6,        Key_KeypadAdd,      ___,
-                           ___, Key_Keypad1, Key_Keypad2,   Key_Keypad3,        Key_Equals,         Key_Quote,
-   ___,                    ___, Key_Keypad0, Key_KeypadDot, Key_KeypadMultiply, Key_KeypadDivide,   Key_Enter,
+   M(MACRO_VERSION_INFO),  ___, Key_7, Key_8,   Key_9,        Key_KeypadSubtract, ___,
+   ___,                    ___, Key_4, Key_5,   Key_6,        Key_KeypadAdd,      ___,
+                           ___, Key_1, Key_2,   Key_3,        Key_Equals,         Key_Quote,
+   ___,                    ___, Key_0, Key_KeypadDot, Key_KeypadMultiply, Key_KeypadDivide,   Key_Enter,
    ___, ___, ___, ___,
    ___),
 
