@@ -20,16 +20,17 @@
 #include "Kaleidoscope-MouseKeys.h"
 
 // Support for macros
+#include <Kaleidoscope-Macros.h>
 
 // Support for controlling the keyboard's LEDs
-#include "Kaleidoscope-LEDControl.h"
+//#include "Kaleidoscope-LEDControl.h"
 
 // Support for "Numpad" mode, which is mostly just the Numpad specific LED mode
 #include "Kaleidoscope-NumPad.h"
 
 // Support for the "Boot greeting" effect, which pulses the 'LED' button for 10s
 // when the keyboard is connected to a computer (or that computer is powered on)
-#include "Kaleidoscope-LEDEffect-BootGreeting.h"
+//#include "Kaleidoscope-LEDEffect-BootGreeting.h"
 
 // Support for Keyboardio's internal keyboard testing mode
 #include "Kaleidoscope-Model01-TestMode.h"
@@ -38,14 +39,13 @@
 #include "Kaleidoscope-HostPowerManagement.h"
 
 #include <Kaleidoscope-HostOS.h>
-#include <Kaleidoscope/HostOS-select.h>
 #include <Kaleidoscope-Unicode.h>
 #include <Kaleidoscope-OneShot.h>
 #include <kaleidoscope/hid.h>
-#include <Kaleidoscope-LED-ActiveModColor.h>
-#include <Kaleidoscope-LEDEffect-FunctionalColor.h>
+//#include <Kaleidoscope-LED-ActiveModColor.h>
+//#include <Kaleidoscope-LEDEffect-FunctionalColor.h>
 
-kaleidoscope::LEDFunctionalColor FunColor;
+//kaleidoscope::LEDFunctionalColor::FCPlugin FunColor;
 
 /** This 'enum' is a list of all the macros used by the Model 01's firmware
   * The names aren't particularly important. What is important is that each
@@ -243,29 +243,58 @@ const macro_t *macroAction(uint8_t macroIndex, uint8_t keyState) {
 /** toggleLedsOnSuspendResume toggles the LEDs off when the host goes to sleep,
  * and turns them back on when it wakes up.
  */
-void toggleLedsOnSuspendResume(kaleidoscope::HostPowerManagement::Event event) {
-  switch (event) {
-  case kaleidoscope::HostPowerManagement::Suspend:
-    LEDControl.paused = true;
-    LEDControl.set_all_leds_to({0, 0, 0});
-    LEDControl.syncLeds();
-    break;
-  case kaleidoscope::HostPowerManagement::Resume:
-    LEDControl.paused = false;
-    LEDControl.refreshAll();
-    break;
-  case kaleidoscope::HostPowerManagement::Sleep:
-    break;
-  }
-}
+//void toggleLedsOnSuspendResume(kaleidoscope::HostPowerManagement::Event event) {
+//  switch (event) {
+//  case kaleidoscope::HostPowerManagement::Suspend:
+//    LEDControl.paused = true;
+//    LEDControl.set_all_leds_to({0, 0, 0});
+//    LEDControl.syncLeds();
+//    break;
+//  case kaleidoscope::HostPowerManagement::Resume:
+//    LEDControl.paused = false;
+//    LEDControl.refreshAll();
+//    break;
+//  case kaleidoscope::HostPowerManagement::Sleep:
+//    break;
+//  }
+//}
 
 /** hostPowerManagementEventHandler dispatches power management events (suspend,
  * resume, and sleep) to other functions that perform action based on these
  * events.
  */
-void hostPowerManagementEventHandler(kaleidoscope::HostPowerManagement::Event event) {
-  toggleLedsOnSuspendResume(event);
-}
+//void hostPowerManagementEventHandler(kaleidoscope::HostPowerManagement::Event event) {
+//  toggleLedsOnSuspendResume(event);
+//}
+
+
+
+// Next, tell Kaleidoscope which plugins you want to use.
+// The order can be important. For example, LED effects are
+// added in the order they're listed here.
+KALEIDOSCOPE_INIT_PLUGINS(
+  // The boot greeting effect pulses the LED button for 10 seconds after the keyboard is first connected
+  //BootGreetingEffect,
+
+  // LEDControl provides support for other LED modes
+  //LEDControl,
+
+  // The macros plugin adds support for macros
+  Macros,
+
+  // The MouseKeys plugin lets you add keys to your keymap which move the mouse.
+  MouseKeys,
+
+  // The HostPowerManagement plugin enables waking up the host from suspend,
+  // and allows us to turn LEDs off when it goes to sleep.
+  HostPowerManagement,
+
+  Unicode,
+  //FunColor,
+  HostOS,
+  OneShot
+  //ActiveModColorEffect
+);
 
 /** The 'setup' function is one of the two standard Arduino sketch functions.
   * It's called when your keyboard first powers up. This is where you set up
@@ -275,100 +304,70 @@ void hostPowerManagementEventHandler(kaleidoscope::HostPowerManagement::Event ev
 void setup() {
   // First, call Kaleidoscope's internal setup function
   Kaleidoscope.setup();
-
-  // Next, tell Kaleidoscope which plugins you want to use.
-  // The order can be important. For example, LED effects are
-  // added in the order they're listed here.
-  Kaleidoscope.use(
-    // The boot greeting effect pulses the LED button for 10 seconds after the keyboard is first connected
-    &BootGreetingEffect,
-
-    // The hardware test mode, which can be invoked by tapping Prog, LED and the left Fn button at the same time.
-    &TestMode,
-
-    // LEDControl provides support for other LED modes
-    &LEDControl,
-
-    // The macros plugin adds support for macros
-    &Macros,
-
-    // The MouseKeys plugin lets you add keys to your keymap which move the mouse.
-    &MouseKeys,
-
-    // The HostPowerManagement plugin enables waking up the host from suspend,
-    // and allows us to turn LEDs off when it goes to sleep.
-    &HostPowerManagement,
-
-    &Unicode,
-    &FunColor,
-    &HostOS,
-    &OneShot,
-    &ActiveModColorEffect
-  );
   
-  MouseKeys.speed = 2;
-  MouseKeys.speedDelay = 5;
-  MouseKeys.accelDelay = 100;
+//  MouseKeys.speed = 2;
+//  MouseKeys.speedDelay = 5;
+//  MouseKeys.accelDelay = 100;
 
   // We want the keyboard to be able to wake the host up from suspend.
   HostPowerManagement.enableWakeup();
 
   HostOS.os(kaleidoscope::hostos::WINDOWS);
 
-  cRGB antiquewhite = CRGB(250, 235, 215);
-  cRGB blue = CRGB(0, 0, 255);
-  cRGB cyan = CRGB(0, 255, 255);
-  cRGB green = CRGB(0, 128, 0);
-  cRGB lightskyblue = CRGB(135, 206, 250);
-  cRGB lime = CRGB(0, 255, 0);
-  cRGB mintcream = CRGB(245, 255, 250);
-  cRGB orange = CRGB(255, 165, 0);
-  cRGB orangered = CRGB(255, 100, 0);
-  cRGB palegreen = CRGB(152, 251, 152);
-  cRGB pink = CRGB(255, 192, 203);
-  cRGB red = CRGB(255, 0, 0);
-  cRGB skyblue = CRGB(135, 206, 235);
-  cRGB slateblue = CRGB(106, 90, 205);
-  cRGB violet = CRGB(238, 130, 238);
-  cRGB white = CRGB(255, 255, 255);
-  cRGB yellow = CRGB(255, 255, 0);
-  cRGB yellowgreen = CRGB(154, 205, 50);
-
-  FunColor.all(CRGB(0, 0, 0));
-  FunColor.allModifiers(yellow, 100);
-  FunColor.allMouse(CRGB(0, 200, 200));
-  FunColor.escape(red, 170);
-  FunColor.numbers(yellowgreen, 160);
-  FunColor.symbols(blue, 160);
-  FunColor.letters(antiquewhite, 100);
-  FunColor.punctuation(blue, 170);
-  FunColor.brackets(blue, 200);
-  FunColor.backslash(blue, 170);
-  FunColor.pipe(blue, 170);
-  FunColor.tab(white, 170);
-  FunColor.backspace(red, 170);
-  FunColor.del(red, 255);
-  FunColor.enter(green, 255);
-  FunColor.space(slateblue, 200);
-  FunColor.arrows(orange, 170);
-  FunColor.nav(yellow, 170);
-  FunColor.insert(yellow, 170);
-  FunColor.cmd(lime, 180);
-  FunColor.app(lime, 180);
-  FunColor.printscreen(lime, 255);
-  FunColor.pause(lime, 180);
-  FunColor.scrolllock(red, 255);
-  FunColor.capslock(red, 255);
-  FunColor.fkeys(red, 170);
-  FunColor.media(lime, 180);
-  FunColor.led(blue, 190);
-  FunColor.mousemove(cyan, 170);
-  FunColor.mousebuttons(lightskyblue, 170);
-  FunColor.mousewarp(cyan, 100);
-  FunColor.mousescroll(lightskyblue, 100);
-  FunColor.macros(violet, 255);
-  FunColor.layer(lime, 100);
-  FunColor.oneshot(skyblue, 150);
+//  cRGB antiquewhite = CRGB(250, 235, 215);
+//  cRGB blue = CRGB(0, 0, 255);
+//  cRGB cyan = CRGB(0, 255, 255);
+//  cRGB green = CRGB(0, 128, 0);
+//  cRGB lightskyblue = CRGB(135, 206, 250);
+//  cRGB lime = CRGB(0, 255, 0);
+//  cRGB mintcream = CRGB(245, 255, 250);
+//  cRGB orange = CRGB(255, 165, 0);
+//  cRGB orangered = CRGB(255, 100, 0);
+//  cRGB palegreen = CRGB(152, 251, 152);
+//  cRGB pink = CRGB(255, 192, 203);
+//  cRGB red = CRGB(255, 0, 0);
+//  cRGB skyblue = CRGB(135, 206, 235);
+//  cRGB slateblue = CRGB(106, 90, 205);
+//  cRGB violet = CRGB(238, 130, 238);
+//  cRGB white = CRGB(255, 255, 255);
+//  cRGB yellow = CRGB(255, 255, 0);
+//  cRGB yellowgreen = CRGB(154, 205, 50);
+//
+//  FunColor.all(CRGB(0, 0, 0));
+//  FunColor.allModifiers(yellow, 100);
+//  FunColor.allMouse(CRGB(0, 200, 200));
+//  FunColor.escape(red, 170);
+//  FunColor.numbers(yellowgreen, 160);
+//  FunColor.symbols(blue, 160);
+//  FunColor.letters(antiquewhite, 100);
+//  FunColor.punctuation(blue, 170);
+//  FunColor.brackets(blue, 200);
+//  FunColor.backslash(blue, 170);
+//  FunColor.pipe(blue, 170);
+//  FunColor.tab(white, 170);
+//  FunColor.backspace(red, 170);
+//  FunColor.del(red, 255);
+//  FunColor.enter(green, 255);
+//  FunColor.space(slateblue, 200);
+//  FunColor.arrows(orange, 170);
+//  FunColor.nav(yellow, 170);
+//  FunColor.insert(yellow, 170);
+//  FunColor.cmd(lime, 180);
+//  FunColor.app(lime, 180);
+//  FunColor.printscreen(lime, 255);
+//  FunColor.pause(lime, 180);
+//  FunColor.scrolllock(red, 255);
+//  FunColor.capslock(red, 255);
+//  FunColor.fkeys(red, 170);
+//  FunColor.media(lime, 180);
+//  FunColor.led(blue, 190);
+//  FunColor.mousemove(cyan, 170);
+//  FunColor.mousebuttons(lightskyblue, 170);
+//  FunColor.mousewarp(cyan, 100);
+//  FunColor.mousescroll(lightskyblue, 100);
+//  FunColor.macros(violet, 255);
+//  FunColor.layer(lime, 100);
+//  FunColor.oneshot(skyblue, 150);
 }
 
 /** loop is the second of the standard Arduino sketch functions.
